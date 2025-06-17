@@ -7,12 +7,13 @@ const config: Phaser.Types.Core.GameConfig = {
   height: 600,
   backgroundColor: '#d0f4f7',
   physics: {
-    default: 'arcade', // 이후 matter로 바꿀 예정
-    arcade: {
+    default: 'matter',
+    matter: {
       gravity: {
-        y: 0,
         x: 0,
+        y: 1, // 중력 적용
       },
+      debug: true, // 개발 중 충돌 디버그 보기
     },
   },
   scene: [GameScene],

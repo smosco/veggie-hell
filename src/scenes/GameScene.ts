@@ -11,6 +11,9 @@ let startText: Phaser.GameObjects.Text;
 let retryText: Phaser.GameObjects.Text;
 
 export default class GameScene extends Phaser.Scene {
+  // 토끼 물리 객체 선언
+  private rabbit!: MatterJS.BodyType;
+
   constructor() {
     super('GameScene');
   }
@@ -24,7 +27,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#d0f4f7');
 
-    // 시작 텍스트
+    // 게임 시작 버튼
     startText = this.add
       .text(300, 280, '게임 시작', {
         fontSize: '28px',
@@ -38,7 +41,7 @@ export default class GameScene extends Phaser.Scene {
       this.startGame();
     });
 
-    // 리트라이 텍스트 (처음엔 숨김)
+    // 다시하기 버튼
     retryText = this.add
       .text(310, 280, '다시하기', {
         fontSize: '24px',
@@ -49,8 +52,28 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive()
       .setVisible(false);
 
-    retryText.on('pointerdonw', () => {
+    retryText.on('pointerdown', () => {
       this.startGame();
+    });
+
+    // 바닥 만들기 (정적인 충돌체)
+    this.matter.add.rectangle(400, 580, 800, 40, {
+      isStatic: true,
+    });
+
+    // 토끼 생성
+    this.rabbit = this.matter.add.rectangle(400, 500, 40, 60, {
+      restitution: 0.1, // 약간 튕김
+    });
+
+    // 점프 키 이벤트
+    this.input.keyboard?.on('keydown-SPACE', () => {
+      const velocity = this.rabbit?.velocity;
+
+      if (velocity && Math.abs(velocity.y) < 1) {
+        this.matter.body.setVelocity(this.rabbit, { x: 0, y: -10 });
+        // this.sound.play('jump'); // 점프 효과음
+      }
     });
   }
 
@@ -60,7 +83,6 @@ export default class GameScene extends Phaser.Scene {
     retryText.setVisible(false);
 
     console.log('게임 시작됨');
-    // 이후 게임 본격 시작 로직은 여기에
   }
 
   gameOver() {
@@ -71,7 +93,7 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     if (currentState === GameState.Play) {
-      // 추후 로직 설정
+      // 게임 중 로직
     }
   }
 }
