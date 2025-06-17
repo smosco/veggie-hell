@@ -51,9 +51,7 @@ export default class GameScene extends Phaser.Scene {
     retryText.on('pointerdown', () => this.startGame());
 
     // 바닥 생성
-    this.matter.add.rectangle(400, 580, 800, 40, {
-      isStatic: true,
-    });
+    this.createTerrain();
 
     // 토끼 생성
     this.createRabbit();
@@ -96,6 +94,8 @@ export default class GameScene extends Phaser.Scene {
         }
       }
     });
+
+    this.createTerrain();
   }
 
   startGame() {
@@ -129,6 +129,20 @@ export default class GameScene extends Phaser.Scene {
     veg.setMass(0.5);
     veg.setVelocityX(-10);
     veg.setData('type', 'vegetable');
+  }
+
+  createTerrain() {
+    const terrainGroup: MatterJS.BodyType[] = [];
+
+    // 기본 평지
+    const flat = this.matter.add.rectangle(400, 580, 800, 40, {
+      isStatic: true,
+      label: 'flat',
+      friction: 0.01,
+    });
+    terrainGroup.push(flat);
+
+    // TODO: 각 구간마다 서로 다른 지형
   }
 
   update() {
