@@ -96,6 +96,8 @@ export default class GameScene extends Phaser.Scene {
 
         if (isRabbit && isVeg) {
           const vegName = a?.getData('name') || b?.getData('name');
+
+          this.playCollisionEffect(this.rabbit.x, this.rabbit.y);
           console.log(`당신은 ${vegName}에게 당했습니다!`);
           this.gameOver();
         }
@@ -229,6 +231,58 @@ export default class GameScene extends Phaser.Scene {
     this.matter.add.rectangle(810, 300, 20, 600, {
       isStatic: true,
       label: 'rightWall',
+    });
+  }
+
+  /**
+   * 토끼, 채소 충돌 이펙트
+   */
+  playCollisionEffect(x: number, y: number) {
+    const text = this.add
+      .text(x, y, '퉁!', {
+        fontSize: '40px',
+        fontStyle: 'bold',
+        fontFamily: 'Arial Black',
+        color: '#ff0000',
+        stroke: '#ffffff',
+        strokeThickness: 6,
+        shadow: {
+          offsetX: 4,
+          offsetY: 4,
+          color: '#000000',
+          blur: 6,
+          stroke: true,
+          fill: true,
+        },
+      })
+      .setOrigin(0.5)
+      .setScale(0)
+      .setAlpha(0);
+
+    // 화면 흔들림
+    this.cameras.main.shake(200, 0.01);
+
+    // 첫 번째 tween: 커지고 나타남
+    this.tweens.add({
+      targets: text,
+      scale: 1.4,
+      alpha: 1,
+      duration: 100,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        // 두 번째 tween: 위로 이동하며 사라짐
+        this.tweens.add({
+          targets: text,
+          y: y - 50,
+          scale: 1,
+          alpha: 0,
+          duration: 600,
+          ease: 'Cubic.easeIn',
+          onComplete: () => {
+            text.destroy();
+          },
+        });
+      },
     });
   }
 
