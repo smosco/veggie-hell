@@ -11,23 +11,21 @@ let startText: Phaser.GameObjects.Text;
 let retryText: Phaser.GameObjects.Text;
 
 export default class GameScene extends Phaser.Scene {
-  // 토끼 물리 객체 선언
-  private rabbit!: MatterJS.BodyType;
+  private rabbit!: Phaser.Physics.Matter.Image;
 
   constructor() {
     super('GameScene');
   }
 
   preload() {
-    console.log('preload');
+    this.load.image('rabbit', '/assets/rabbit.png');
+    this.load.image('carrot', '/assets/carrot.png');
   }
 
   create() {
-    console.log('create');
-
     this.cameras.main.setBackgroundColor('#d0f4f7');
 
-    // 게임 시작 버튼
+    // 시작 버튼
     startText = this.add
       .text(300, 280, '게임 시작', {
         fontSize: '28px',
@@ -37,9 +35,7 @@ export default class GameScene extends Phaser.Scene {
       })
       .setInteractive();
 
-    startText.on('pointerdown', () => {
-      this.startGame();
-    });
+    startText.on('pointerdown', () => this.startGame());
 
     // 다시하기 버튼
     retryText = this.add
@@ -52,27 +48,52 @@ export default class GameScene extends Phaser.Scene {
       .setInteractive()
       .setVisible(false);
 
-    retryText.on('pointerdown', () => {
-      this.startGame();
-    });
+    retryText.on('pointerdown', () => this.startGame());
 
-    // 바닥 만들기 (정적인 충돌체)
+    // 바닥 생성
     this.matter.add.rectangle(400, 580, 800, 40, {
       isStatic: true,
     });
 
     // 토끼 생성
-    this.rabbit = this.matter.add.rectangle(400, 500, 40, 60, {
-      restitution: 0.1, // 약간 튕김
-    });
+    this.createRabbit();
 
-    // 점프 키 이벤트
+    // 점프 입력
     this.input.keyboard?.on('keydown-SPACE', () => {
-      const velocity = this.rabbit?.velocity;
+      const velocity = this.rabbit?.body?.velocity;
 
       if (velocity && Math.abs(velocity.y) < 1) {
-        this.matter.body.setVelocity(this.rabbit, { x: 0, y: -10 });
-        // this.sound.play('jump'); // 점프 효과음
+        this.rabbit.setVelocityY(-10);
+      }
+    });
+
+    // 채소 반복 생성
+    this.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        if (currentState === GameState.Play) {
+          this.createVegetable();
+        }
+      },
+      loop: true,
+    });
+
+    // 충돌 이벤트 등록 (단 한 번만)
+    // TODO: matterCollision 플러그인 설치
+    this.matter.world.on('collisionstart', (event) => {
+      for (const pair of event.pairs) {
+        const a = pair.bodyA.gameObject;
+        const b = pair.bodyB.gameObject;
+
+        if (!a || !b) continue;
+
+        const isRabbit = a === this.rabbit || b === this.rabbit;
+        const isVeg = a.getData('type') === 'vegetable' || b.getData('type') === 'vegetable';
+
+        if (isRabbit && isVeg) {
+          console.log('충돌!');
+          this.gameOver();
+        }
       }
     });
   }
@@ -82,13 +103,32 @@ export default class GameScene extends Phaser.Scene {
     startText.setVisible(false);
     retryText.setVisible(false);
 
-    console.log('게임 시작됨');
+    console.log('게임 시작');
   }
 
   gameOver() {
     currentState = GameState.Die;
     retryText.setVisible(true);
+
     console.log('게임 오버');
+  }
+
+  createRabbit() {
+    this.rabbit = this.matter.add.image(400, 500, 'rabbit');
+    this.rabbit.setFixedRotation();
+    this.rabbit.setFriction(0.01);
+    this.rabbit.setBounce(0);
+    this.rabbit.setData('type', 'rabbit');
+  }
+
+  createVegetable() {
+    const veg = this.matter.add.image(850, 520, 'carrot');
+    veg.setCircle(32); // 적절한 반지름
+    veg.setFriction(0.005);
+    veg.setBounce(0.2);
+    veg.setMass(0.5);
+    veg.setVelocityX(-10);
+    veg.setData('type', 'vegetable');
   }
 
   update() {
