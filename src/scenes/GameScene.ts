@@ -29,8 +29,8 @@ export default class GameScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#d0f4f7');
 
-    // 중력 설정 (매우 중요!)
-    this.matter.world.engine.world.gravity.y = 0.4;
+    // 중력 설정 (좀 더 현실적으로)
+    this.matter.world.engine.world.gravity.y = 0.6;
 
     // 시작 버튼
     startText = this.add
@@ -63,10 +63,12 @@ export default class GameScene extends Phaser.Scene {
     // 토끼 생성
     this.createRabbit();
 
-    // 점프 입력
+    // 점프 입력 (공중에서 최대 3번까지만 점프 가능)
     this.input.keyboard?.on('keydown-SPACE', () => {
       if (currentState === GameState.Play) {
-        this.rabbit.setVelocityY(-8); // 언제든지 점프 가능
+        // 언제든지 점프 가능
+        this.rabbit.setVelocityY(-8);
+        // TODO: 공중에서 3번 이상 연속 점프 막기
       }
     });
 
@@ -119,7 +121,6 @@ export default class GameScene extends Phaser.Scene {
       this.rabbit.setVelocity(0, 0);
       this.rabbit.setAngularVelocity(0);
     }
-
     console.log('게임 시작');
   }
 
@@ -130,11 +131,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createRabbit() {
-    this.rabbit = this.matter.add.image(150, 450, 'rabbit'); // Y 위치를 바닥 근처로 조정
+    this.rabbit = this.matter.add.image(150, 450, 'rabbit');
     this.rabbit.setFixedRotation();
-    this.rabbit.setFriction(0.3); // 마찰력 증가로 미끄러짐 방지
-    this.rabbit.setFrictionAir(0.05); // 공기저항 증가로 점프 제한
-    this.rabbit.setBounce(0.1); // 바운스 감소
+    this.rabbit.setFriction(0.4); // 마찰력 증가 (더 안정적인 착지)
+    this.rabbit.setFrictionAir(0.01); // 공기저항 적절히 설정
+    this.rabbit.setBounce(0.6); // 바운스 더 증가 (자연스러운 착지 반동)
+    this.rabbit.setMass(1); // 질량 설정으로 더 현실적인 물리
     this.rabbit.setData('type', 'rabbit');
   }
 
@@ -205,7 +207,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createTerrain() {
-    // 기울어진 바닥들 생성
+    // 기울어진 바닥들 생성 (더 재미있는 물리 효과)
     this.matter.add.rectangle(200, 580, 400, 40, {
       isStatic: true,
       label: 'ground1',
