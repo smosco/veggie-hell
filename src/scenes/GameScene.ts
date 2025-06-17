@@ -13,12 +13,21 @@ let retryText: Phaser.GameObjects.Text;
 
 export default class GameScene extends Phaser.Scene {
   private rabbit!: Phaser.Physics.Matter.Image;
+  private bgFar!: Phaser.GameObjects.TileSprite;
+  private bgMid!: Phaser.GameObjects.TileSprite;
+  private bgNear!: Phaser.GameObjects.TileSprite;
 
   constructor() {
     super('GameScene');
   }
 
+  /** 미리 로드 */
   preload() {
+    // 배경 이미지
+    this.load.image('bg-far', '/assets/bg-far.png');
+    this.load.image('bg-mid', '/assets/bg-mid.png');
+    this.load.image('bg-near', '/assets/bg-near.png');
+
     this.load.image('rabbit', '/assets/rabbit.png');
     // 모든 채소 이미지 preload
     vegetableTypes.forEach((v) => {
@@ -56,6 +65,16 @@ export default class GameScene extends Phaser.Scene {
       .setVisible(false);
 
     retryText.on('pointerdown', () => this.startGame());
+
+    // 배경 타일 (순서 중요)
+    this.bgFar = this.add.tileSprite(400, 300, 800, 600, 'bg-far').setScrollFactor(0);
+    this.bgMid = this.add.tileSprite(400, 300, 800, 600, 'bg-mid').setScrollFactor(0);
+    this.bgNear = this.add.tileSprite(400, 300, 800, 600, 'bg-near').setScrollFactor(0);
+
+    // 배경을 뒤로 보내기
+    this.children.sendToBack(this.bgNear);
+    this.children.sendToBack(this.bgMid);
+    this.children.sendToBack(this.bgFar);
 
     // 바닥 생성 (기울어진 바닥)
     this.createTerrain();
@@ -288,6 +307,11 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     if (currentState === GameState.Play) {
+      // Parallax 배경 이동
+      this.bgFar.tilePositionX += 0.2;
+      this.bgMid.tilePositionX += 0.5;
+      this.bgNear.tilePositionX += 1.0;
+
       // 토끼가 화면 밖으로 떨어지면 게임 오버
       if (this.rabbit && this.rabbit.y > 650) {
         this.gameOver();
